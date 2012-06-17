@@ -13,7 +13,6 @@ describe MarkovModel do
   it "pick word corresponding to random number" do
     text = "The man is tall. The man is big."
 
-
     # Obs: testing private method through "send"
     mc = MarkovModel.new(text.split)
     wd = mc.send(:pick_value, 0.8, "is")
