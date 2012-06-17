@@ -8,7 +8,6 @@ class MarkovModel
     @transitions = {}
     @frequencies = {}
     add_input(value_chain)
-    compute_frequencies
   end
   
   def generate(initial_value, value_number)
@@ -31,6 +30,8 @@ class MarkovModel
       add_value(prev_value, value)
       prev_value = value
     }
+    
+    compute_frequencies
   end
   
   private
@@ -41,7 +42,7 @@ class MarkovModel
   end
   
   def pick_value(random_number, prev_value)
-    succ_list = @frequencies[prev_value]
+    succ_list = @frequencies[prev_value].sort
     freq_counter = 0.0
     
     succ_list.each { |succ_value, freq|
@@ -61,8 +62,6 @@ class MarkovModel
         @frequencies[value] ||= Hash.new{0}
         @frequencies[value][succ_value] = occurencies/sum 
       }
-      
-      @frequencies[value] = @frequencies[value].sort
     }
   end
   
