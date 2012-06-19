@@ -1,6 +1,8 @@
 require 'midilib/sequence'
 require 'midilib/io/seqreader'
 
+module Musikov
+  
 class FileNotFoundError < StandardError ; end
 
 class MidiParser
@@ -20,6 +22,7 @@ class MidiParser
   def read_files(file_or_folder_path)  
     raise FileNotFoundError unless File.exists?(file_or_folder_path)
     
+    result = []
     files = []
     if File.directory?(file_or_folder_path) then
       files += Dir.glob("#{file_or_folder_path}/**/*.mid")
@@ -29,15 +32,16 @@ class MidiParser
     
     if files.empty? then
       puts "No files were added."
-      return
-    end 
+    else
+      files.each { |file_path|
+        result << parse(file_path)
+      }
+    end
     
-    files.each { |file_path|
-      read_midi(file_path)
-    }
+    return result
   end
   
-  def read_midi(file_path)
+  def parse(file_path)
     # Create a new, empty sequence.
     seq = MIDI::Sequence.new()
     
@@ -45,35 +49,13 @@ class MidiParser
     File.open(file_path, 'rb') { | file |
         seq.read(file) { | track, num_tracks, i |
             # Print something when each track is read.
-            puts "read track #{i} of #{num_tracks} => #{track.inspect}"
+            puts "=> reading track #{track ? track.name : ''} (#{i} of #{num_tracks})"
         }
     }
+    
+    return seq
   end
     
 end
 
-class MidiElement
-  
-  attr_accessor :note, :tempo
-  
-  def initialize(note, tempo)
-    @note = note
-    @tempo = tempo
-  end
-  
-  def ==(comparison_object)
-    comparison_object.equal?(self) ||
-      (comparison_object.instance_of?(self.class) && 
-       @note == comparison_object.note &&
-       @tempo == comparison_object.tempo)
-  end
-  
-  def hash
-    @note.hash ^ @tempo.hash
-  end
-  
-  def to_s
-    "Note: #{@note.upcase} Tempo: #{@tempo} "
-  end
-  
 end

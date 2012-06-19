@@ -1,12 +1,12 @@
 require 'rspec'
-require 'markov_model'
+require 'musikov/markov_model'
 
-describe MarkovModel do
+describe Musikov::MarkovModel do
   
   it "should add values with its correspondent frequence" do
     text = "The man is tall. The man is big."
 
-    mc = MarkovModel.new(text.split)
+    mc = Musikov::MarkovModel.new(text.split)
     mc.frequencies["is"].should == {"big." => 0.5, "tall." => 0.5}
   end
   
@@ -14,7 +14,7 @@ describe MarkovModel do
     text = "The man is tall. The man is big."
 
     # Obs: testing private method through "send"
-    mc = MarkovModel.new(text.split)
+    mc = Musikov::MarkovModel.new(text.split)
     wd = mc.send(:pick_value, 0.8, "is")
     wd.should == "tall."
   end
@@ -23,7 +23,7 @@ describe MarkovModel do
     text1 = "The man is tall. The man is big."
     text2 = "The man is strange. The man is very strange."
 
-    mc = MarkovModel.new()
+    mc = Musikov::MarkovModel.new()
     mc.add_input(text1.split)
     mc.frequencies["is"].should == {"big." => 0.5, "tall." => 0.5}
     

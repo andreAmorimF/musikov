@@ -1,3 +1,6 @@
+
+module Musikov
+  
 class MarkovModel
   
   attr_reader :frequencies
@@ -65,4 +68,6 @@ class MarkovModel
     }
   end
   
+end
+
 end
