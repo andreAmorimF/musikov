@@ -10,38 +10,34 @@ class MidiParser
   public
   
   def initialize(file_or_folder_path)
-    read_files(file_or_folder_path)
+    @path = file_or_folder_path
   end
   
-  def add_resource(file_or_folder_path)
-    read_files(file_or_folder_path)
-  end
-  
-  private
-  
-  def read_files(file_or_folder_path)  
-    raise FileNotFoundError unless File.exists?(file_or_folder_path)
+  def parse  
+    raise FileNotFoundError unless File.exists?(@path)
     
     result = []
     files = []
-    if File.directory?(file_or_folder_path) then
-      files += Dir.glob("#{file_or_folder_path}/**/*.mid")
+    if File.directory?(@path) then
+      files += Dir.glob("#{@path}/**/*.mid")
     else
-      files << file_or_folder_path if File.extname(file_or_folder_path) == ".mid"
+      files << file_or_folder_path if File.extname(@path) == ".mid"
     end
     
     if files.empty? then
       puts "No files were added."
     else
       files.each { |file_path|
-        result << parse(file_path)
+        result << read_midi(file_path)
       }
     end
     
     return result
   end
   
-  def parse(file_path)
+  private
+  
+  def read_midi(file_path)
     # Create a new, empty sequence.
     seq = MIDI::Sequence.new()
     

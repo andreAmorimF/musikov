@@ -1,27 +1,59 @@
+require 'musikov/midi_parser.rb'
+require 'musikov/markov_model.rb'
 
 module Musikov
+
+class MarkovRepository
+  
+  attr_accessor :models_by_instrument
+  
+  def initialize
+    @models_by_instrument = {}
+  end
+  
+  def import(path)
+    parser = MidiParser.new(path)
+    sequencies = parser.parse
+    
+    builder = MarkovBuilder.new()
+    sequencies.each { |sequency|
+      builder.add(sequency)
+    }
+    
+    @models_by_instrument = builder.build
+    puts @models_by_instrument
+  end
+  
+end
   
 class MarkovBuilder
   
   def initialize
-    @value_chain = []
+    @value_chain = {}
   end
   
-  def add_sequency(sequency)
+  def add(sequency)
     sequency.each { |track|
+      @value_chain[track.instrument] ||= []
+      
       track.each { |event|
         if MIDI::NoteEvent === event then
           event.print_decimal_numbers = true
           event.print_note_names = true
           
-          @value_chain << MidiElement.new(event.note, event.velocity)
+          @value_chain[track.instrument] << MidiElement.new(event.note, event.velocity)
         end
       }
     }
   end
   
   def build
-    return MarkovModel.new(@value_chain)
+    model_by_instrument = {}
+    @value_chain.each{ |key, value|
+      model_by_instrument[key] = MarkovModel.new(value)
+    }
+    
+    return model_by_instrument
   end
   
 end
@@ -47,7 +79,7 @@ class MidiElement
   end
   
   def to_s
-    "Note: #{@note.upcase} Tempo: #{@tempo} "
+    "Note: #{@note} Tempo: #{@tempo} "
   end
   
 end
