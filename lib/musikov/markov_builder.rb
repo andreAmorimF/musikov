@@ -21,7 +21,6 @@ class MarkovRepository
     }
     
     @models_by_instrument = builder.build
-    puts @models_by_instrument
   end
   
 end
@@ -33,15 +32,21 @@ class MarkovBuilder
   end
   
   def add(sequency)
+    quarter_note_length = sequency.note_to_delta('quarter')
+    puts "Quarter : #{quarter_note_length}"
+    
     sequency.each { |track|
-      @value_chain[track.instrument] ||= []
+      next if track.instrument.nil?
+      
+      events = []
+      @value_chain[track.instrument] ||= events
       
       track.each { |event|
-        if MIDI::NoteEvent === event then
-          event.print_decimal_numbers = true
+        if MIDI::NoteOnEvent === event then
           event.print_note_names = true
+          event.off.print_note_names = true
           
-          @value_chain[track.instrument] << MidiElement.new(event.note, event.velocity)
+          events << MidiElement.new(event.note_to_s, 0)
         end
       }
     }
@@ -60,26 +65,32 @@ end
 
 class MidiElement
   
-  attr_accessor :note, :tempo
+  attr_accessor :note, :duration
   
-  def initialize(note, tempo)
+  def initialize(note, duration)
     @note = note
-    @tempo = tempo
+    @duration = duration
   end
   
   def ==(comparison_object)
     comparison_object.equal?(self) ||
       (comparison_object.instance_of?(self.class) && 
        @note == comparison_object.note &&
-       @tempo == comparison_object.tempo)
+       @duration == comparison_object.duration)
+  end
+  
+  def eql?(comparison_object)
+    self.class.equal?(comparison_object.class) &&
+      @note == comparison_object.note &&
+      @duration == comparison_object.duration
   end
   
   def hash
-    @note.hash ^ @tempo.hash
+    @note.hash ^ @duration.hash
   end
   
   def to_s
-    "Note: #{@note} Tempo: #{@tempo} "
+    "[Note: #{@note} Duration: #{@duration}]"
   end
   
 end

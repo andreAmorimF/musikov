@@ -68,6 +68,10 @@ class MarkovModel
     }
   end
   
+  def to_s
+    return @frequencies
+  end
+  
 end
 
 end

@@ -43,10 +43,7 @@ class MidiParser
     
     # Read the contents of a MIDI file into the sequence.
     File.open(file_path, 'rb') { | file |
-        seq.read(file) { | track, num_tracks, i |
-            # Print something when each track is read.
-            puts "=> reading track #{track ? track.name : ''} (#{i} of #{num_tracks})"
-        }
+        seq.read(file)
     }
     
     return seq
