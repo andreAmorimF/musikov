@@ -5,14 +5,21 @@ module Musikov
   
 class FileNotFoundError < StandardError ; end
 
+# This class is responsible for interacting with MidiLib in order
+# to read the input midi files.
 class MidiParser
   
+  ####################
   public
+  ####################
   
+  # Initializes the parser using the file (or folder) path parameter
+  # * Parameter can be a single file path or a folder
   def initialize(file_or_folder_path)
     @path = file_or_folder_path
   end
   
+  # Obtains the list of midi files to parse and call the Midilib parse routine
   def parse  
     raise FileNotFoundError unless File.exists?(@path)
     
@@ -35,8 +42,11 @@ class MidiParser
     return result
   end
   
+  ####################
   private
+  ####################
   
+  # Call the Midilib's parse routine to read information from a midi file
   def read_midi(file_path)
     # Create a new, empty sequence.
     seq = MIDI::Sequence.new()
