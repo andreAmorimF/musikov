@@ -1,6 +1,11 @@
 #!/usr/bin/env ruby
 #----------------------------------------------------------------------------------------
-# Deals with deployments registration
+# The program takes an initial midi file (or folder with many midis) path
+# from the command line. It will generate a random midi file from the input
+# based on a Markov Chain model.
+#
+# Author::    André Fonseca
+# License::   Simplified BSD
 #----------------------------------------------------------------------------------------
 
 $LOAD_PATH.unshift(File.dirname(__FILE__) + '/../lib') unless $LOAD_PATH.include?(File.dirname(__FILE__) + '/../lib')
@@ -8,5 +13,5 @@ $LOAD_PATH.unshift(File.dirname(__FILE__) + '/../lib') unless $LOAD_PATH.include
 require 'musikov'
 
 rep = Musikov::MarkovRepository.new
-rep.import("/home/andre/Downloads/")
+#rep.import("someMidi.mid")
   
