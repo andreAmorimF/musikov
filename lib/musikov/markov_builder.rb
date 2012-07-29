@@ -42,6 +42,10 @@ end
 # markov chain. 
 class MarkovBuilder
   
+  ####################
+  public
+  ####################
+  
   # Initialize the hashes used to build the markov chain of note elements.
   # * The value_chain is a hash containing a list of note events by instrument.
   # * The duration table is a dynamic generated hash (generated from the "quarter" duration value) that maps
@@ -117,7 +121,9 @@ class MarkovBuilder
     return model_by_instrument
   end
   
+  ####################
   private
+  ####################
   
   # Creates the duration table from the "quarter" note duration in ticks.
   # * The quarter note duration will change for every track!
