@@ -10,8 +10,64 @@
 
 $LOAD_PATH.unshift(File.dirname(__FILE__) + '/../lib') unless $LOAD_PATH.include?(File.dirname(__FILE__) + '/../lib')
 
+require 'rubygems'
 require 'musikov'
+require 'thor'
 
-rep = Musikov::MarkovRepository.new
-#rep.import("someMidi.mid")
+class MusikovStarter < Thor
+
+  include Thor::Actions
   
+  desc "generate", "generate random midi from input midi files"
+  method_option :resources, :aliases => "-r", :type => :array, :desc => "File or folder list containing the input midi files."
+  def generate
+    begin
+      repository = Musikov::MarkovRepository.new
+      say "Learning midi sequence from resources :"
+      print_in_columns options[:resources]
+      repository.import options[:resources]
+      say "\nFiles successfully imported!", Thor::Shell::Color::GREEN
+      say "\nGenerating your random midi..."
+      invoke :generate_midi, [repository]
+    rescue
+      say "There was a problem importing the selected files : #{$!}", Thor::Shell::Color::RED
+    end
+  end
+  
+  desc "generate_midi", "midi_generation task", :hide => true
+  def generate_midi(*reps)
+    say "Select the instruments you would like to include in the output file:"
+    
+    # Shows the instruments options to the user
+    opts = {}
+    repository = reps.first
+    repository.models_by_instrument.each_with_index { |(instrument, hash), index|
+      say "#{index + 1} : #{instrument}"
+      opts[index + 1] = instrument
+    }
+    say "* : all instruments => Default"
+    
+    # Asks for the instrument selection. Non selected instruments will be excluded from the model.
+    # By default it will include everything...
+    res = ask "\nSelect (ex: 1 2 3):", Thor::Shell::Color::YELLOW
+    instruments = []
+    res.split.each { |opt|
+      if (opt.to_i != 0) then
+        instruments << opts[opt.to_i] unless opts[opt.to_i].nil?
+      end
+    }
+    
+    # Selects all instruments if none was pick
+    instruments += opts.values if instruments.empty?
+    
+    # Excluding non selected instruments...
+    repository.models_by_instrument.delete_if { |instrument, hash|
+      !instruments.include?(instrument)
+    }
+    
+    # Picking song from model...
+  end
+  
+end
+
+MusikovStarter.start

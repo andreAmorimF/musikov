@@ -15,21 +15,30 @@ class MidiParser
   
   # Initializes the parser using the file (or folder) path parameter
   # * Parameter can be a single file path or a folder
-  def initialize(file_or_folder_path)
-    @path = file_or_folder_path
+  def initialize(file_or_folder_paths = [])
+    @paths = []
+    @paths += file_or_folder_paths
   end
   
   # Obtains the list of midi files to parse and call the Midilib parse routine
-  def parse  
-    raise FileNotFoundError unless File.exists?(@path)
-    
+  def parse
     result = []
     files = []
-    if File.directory?(@path) then
-      files += Dir.glob("#{@path}/**/*.mid")
-    else
-      files << file_or_folder_path if File.extname(@path) == ".mid"
-    end
+    
+    @paths.each { |path|
+      begin
+        raise FileNotFoundError unless File.exists?(path)
+        
+        if File.directory?(path) then
+          files += Dir.glob("#{path}/**/*.mid")
+        else
+          files << path if File.extname(path) == ".mid"
+        end
+      rescue
+        puts "Not a valid file path : #{path} => #{$!}"
+      end
+    }
+    
     
     if files.empty? then
       puts "No files were added."

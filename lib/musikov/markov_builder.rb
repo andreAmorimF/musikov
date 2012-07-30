@@ -15,12 +15,12 @@ class MarkovRepository
     @models_by_instrument = {}
   end
   
-  # Call parser over indicated path and trigger the 
+  # Call parser over indicated paths and trigger the 
   # markov chain building process.
-  # * the path can be a folder or a single file
+  # * the paths can be either folders or files
   # * the file indicated by the path must exist!
-  def import(path)
-    parser = MidiParser.new(path)
+  def import(paths = [])
+    parser = MidiParser.new(paths)
     sequencies = parser.parse
     
     builder = MarkovBuilder.new()
@@ -75,7 +75,7 @@ class MarkovBuilder
       
       # Create a list of midi elements for an instrument
       elements = []
-      @value_chain[track.instrument] ||= elements
+      @value_chain[track.instrument.strip] ||= elements
 
       # Iterates the track event list...
       track.each { |event|
