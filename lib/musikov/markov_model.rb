@@ -26,7 +26,7 @@ class MarkovModel
   # * The initial_value may be nil
   # * The value_number indicates the number of elements on the result random sequence
   def generate(initial_value, value_number)
-    generated_sequence << initial_value
+    generated_sequence = []
     selected_value = initial_value
     
     rnd = Random.new
@@ -62,7 +62,7 @@ class MarkovModel
   
   # Pick a value on the frequencies hash based on a random number and the previous state
   def pick_value(random_number, prev_value)
-    succ_list = @frequencies[prev_value].sort
+    succ_list = @frequencies[prev_value].sort_by {|key, value| value}
     freq_counter = 0.0
     
     succ_list.each { |succ_value, freq|

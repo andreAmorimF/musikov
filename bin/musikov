@@ -20,6 +20,7 @@ class MusikovStarter < Thor
   
   desc "generate", "generate random midi from input midi files"
   method_option :resources, :aliases => "-r", :type => :array, :desc => "File or folder list containing the input midi files."
+  method_option :output_folder, :aliases => "-o", :type => :string, :desc => "Output folder."
   def generate
     begin
       repository = Musikov::MarkovRepository.new
@@ -28,19 +29,18 @@ class MusikovStarter < Thor
       repository.import options[:resources]
       say "\nFiles successfully imported!", Thor::Shell::Color::GREEN
       say "\nGenerating your random midi..."
-      invoke :generate_midi, [repository]
+      generate_midi(repository, options[:output_folder])
     rescue
-      say "There was a problem importing the selected files : #{$!}", Thor::Shell::Color::RED
+      say "There was a problem importing the selected files : #{$!.message} => #{$!.backtrace.join("\n")}", Thor::Shell::Color::RED
     end
   end
   
   desc "generate_midi", "midi_generation task", :hide => true
-  def generate_midi(*reps)
+  def generate_midi(repository, path)
     say "Select the instruments you would like to include in the output file:"
     
     # Shows the instruments options to the user
     opts = {}
-    repository = reps.first
     repository.models_by_instrument.each_with_index { |(instrument, hash), index|
       say "#{index + 1} : #{instrument}"
       opts[index + 1] = instrument
@@ -61,11 +61,24 @@ class MusikovStarter < Thor
     instruments += opts.values if instruments.empty?
     
     # Excluding non selected instruments...
-    repository.models_by_instrument.delete_if { |instrument, hash|
-      !instruments.include?(instrument)
+    repository.models_by_instrument.delete_if { |instrument, markov_chain|
+      !instruments.include?(instrument) || markov_chain.frequencies.empty?
     }
     
     # Picking song from model...
+    sequences = {}
+    repository.models_by_instrument.each { |instrument, markov_chain|
+       sequences[instrument] = markov_chain.generate(nil, 50)
+    }
+    
+    # Writing in the output file...
+    unless path.nil? then
+      repository.export(sequences, path)
+    else
+      repository.export(sequences)
+    end
+    
+    say "\nSuccess: output file generated in output.mid!", Thor::Shell::Color::GREEN
   end
   
 end

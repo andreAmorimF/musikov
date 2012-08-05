@@ -1,4 +1,5 @@
 require 'musikov/midi_parser.rb'
+require 'musikov/midi_writer.rb'
 require 'musikov/markov_model.rb'
 
 module Musikov
@@ -29,6 +30,12 @@ class MarkovRepository
     }
     
     @models_by_instrument = builder.build
+  end
+  
+  # Export the generated chains
+  def export(sequence_hash = {}, path = ".")
+    writer = MidiWriter.new(path)
+    writer.write(sequence_hash)
   end
   
 end
@@ -70,20 +77,15 @@ class MarkovBuilder
     create_duration_table(quarter_note_length)
     
     # For each instrument on the sequence...
-    sequence.each { |track|
-      next if track.instrument.nil?
-      
+    sequence.each { |track|      
       # Create a list of midi elements for an instrument
       elements = []
-      @value_chain[track.instrument.strip] ||= elements
 
       # Iterates the track event list...
       track.each { |event|
         
         # Consider only "NoteOn" events since they represent the start of a note event (avoid duplication with "NoteOff").
         if MIDI::NoteOnEvent === event then
-          event.print_note_names = true
-          
           # From its correspondent "NoteOff" element, extract the duration of the note event.
           duration = event.off.time_from_start - event.time_from_start + 1
           
@@ -102,12 +104,21 @@ class MarkovBuilder
                 new_duration = key
               end
             }
+            duration_representation = @duration_table[new_duration]
           end
 
           # Create new markov chain state and put into the "elements" list
           elements << MidiElement.new(event.note_to_s, duration_representation)
         end
       }
+      
+      if track.instrument.nil? or track.instrument =~ /^\s+.+/
+        track_name = track.name.strip
+      else
+        track_name = track.instrument
+      end
+      
+      @value_chain[track_name] ||= elements unless elements.empty?
     }
   end
   
@@ -129,61 +140,49 @@ class MarkovBuilder
   # * The quarter note duration will change for every track!
   def create_duration_table(quarter_note_length)
     # Fuck it if the song have two dots or a combination of dots and "three"...
-    long = (quarter_note_length * 16)
-    long_dot = (quarter_note_length * 24)
-    long_three = (32 * quarter_note_length / 3)
-    double_whole = (quarter_note_length * 8)
-    double_whole_dot = (quarter_note_length * 12)
-    double_whole_three = (long / 3)
     whole = (quarter_note_length * 4)
-    whole_dot = (quarter_note_length * 6)
-    whole_three = (double_whole / 3)
+    dotted_whole = (quarter_note_length * 6)
+    whole_triplet = (8 * quarter_note_length / 3)
     half = (quarter_note_length * 2)
-    half_dot = (quarter_note_length * 3)
+    dotted_half = (quarter_note_length * 3)
     half_three = (whole / 3)
-    quarter_dot = (quarter_note_length * 1.5)
-    quarter_three = (half / 3)
+    dotted_quarter = (quarter_note_length * 1.5)
+    quarter_triplet = (half / 3)
     eight = (quarter_note_length / 2)
-    eight_three = (quarter_note_length / 3)
-    eight_dot = (3 * quarter_note_length / 4)
-    sizteenth = (quarter_note_length / 4)
-    sizteenth_three = (eight / 3)
-    sizteenth_dot = (3 * quarter_note_length / 8)
+    eight_triplet = (quarter_note_length / 3)
+    dotted_eight = (3 * quarter_note_length / 4)
+    sixteenth = (quarter_note_length / 4)
+    sixteenth_triplet = (eight / 3)
+    dotted_sixteenth = (3 * quarter_note_length / 8)
     thirty_second = (quarter_note_length / 8)
-    thirty_second_three = (sizteenth / 3)
-    thirty_second_dot = (3 * quarter_note_length / 16)
+    thirty_second_triplet = (sixteenth / 3)
+    dotted_thirty_second = (3 * quarter_note_length / 16)
     sixty_fourth = (quarter_note_length / 16)
-    sixty_fourth_three = (thirty_second / 3)
-    sixty_fourth_dot = (3 * quarter_note_length / 32)
+    sixty_fourth_triplet = (thirty_second / 3)
+    dotted_sixty_fourth = (3 * quarter_note_length / 32)
     
     @duration_table = {
-      long => 'long',
-      long_dot => 'long dot',
-      long_three => 'long three',
-      double_whole => 'double whole',
-      double_whole_dot => 'double whole dot',
-      double_whole_three => 'double whole three',
       whole => 'whole',
-      whole_dot => 'whole dot',
-      whole_three => 'whole three',
+      dotted_whole => 'dotted whole',
+      whole_triplet => 'whole triplet',
       half => 'half',
-      half_dot => 'half dot',
-      half_three => 'half three',
+      dotted_half => 'dotted half',
+      half_three => 'half triplet',
       quarter_note_length => 'quarter',
-      quarter_dot => 'quarter dot',
-      quarter_three => 'quarter three',
+      dotted_quarter => 'dotted quarter',
+      quarter_triplet => 'quarter triplet',
       eight => 'eighth',
-      eight_dot => 'eighth dot',
-      eight_three => 'eight three',
-      sizteenth => 'sixteenth',
-      sizteenth_dot => 'sixteenth dot',
-      sizteenth_three => 'sizteenth three',
-      thirty_second => 'thirty second',
-      thirty_second_dot => 'thirty second dot',
-      thirty_second_three => 'thirty second three',
-      sixty_fourth => 'sixty fourth',
-      sixty_fourth_dot => 'sixty fourth dot',
-      sixty_fourth_three => 'sixty fourth three'
+      dotted_eight => 'dotted eighth',
+      eight_triplet => 'eighth triplet',
+      sixteenth => 'sixteenth',
+      dotted_sixteenth => 'dotted sixteenth',
+      sixteenth_triplet => 'sixteenth triplet',
+      thirty_second => 'thirtysecond',
+      dotted_thirty_second => 'dotted thirtysecond',
+      thirty_second_triplet => 'thirtysecond triplet',
+      sixty_fourth => 'sixtyfourth',
+      dotted_sixty_fourth => 'dotted sixtyfourth',
+      sixty_fourth_triplet => 'sixtyfourth triplet'
     }
   end
   
