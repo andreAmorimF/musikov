@@ -112,6 +112,7 @@ class MarkovBuilder
         end
       }
       
+      # Checking if the instrument name is well formed. Otherwise, use the track name.
       if track.instrument.nil? or track.instrument =~ /^\s+.+/
         track_name = track.name.strip
       else

@@ -34,10 +34,13 @@ class MidiWriter
       seq.tracks << track
     
       # Give the track a name and an instrument name (optional).
+      track.name = instrument
       track.instrument = instrument
     
       # Add a volume controller event (optional).
+      
       track.events << MIDI::Controller.new(0, MIDI::CC_VOLUME, 127)
+      track.events << MIDI::ProgramChange.new(0, 1, 0)
       midi_elements.each { |midi_element|
         track.events << MIDI::NoteOn.new(0, midi_element.note ,127,0)
         track.events << MIDI::NoteOff.new(0, midi_element.note ,127, seq.note_to_delta(midi_element.duration))
