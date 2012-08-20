@@ -12,6 +12,12 @@ More inform about Markov Chains : http://en.wikipedia.org/wiki/Markov_chain
 
 ### RubyGems instalation
 
+```bash
+gem install musikov
+```
+
+You may need root privileges to install the gem.
+
 ## How to use it
 
 First launch the musikov passing a midi file, or a folder containg midi files, as the main argument:
@@ -25,6 +31,7 @@ The musikov will output a random midi file named output.mid (by default), or the
  - Gem packaging.
  - Installation instructions.
  - Define an option for the duration of the songs by time or by number of notes.
+ - Maybe classify different sacles in order to aproximate a generated song to the predominant scale.
 
 ## Author
 
