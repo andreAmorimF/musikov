@@ -62,7 +62,12 @@ class MarkovModel
   
   # Pick a value on the frequencies hash based on a random number and the previous state
   def pick_value(random_number, prev_value)
-    succ_list = @frequencies[prev_value].sort_by {|key, value| value}
+	next_value = @frequencies[prev_value]
+	if next_value.nil? then
+		next_value = @frequencies[nil]
+	end
+
+    succ_list =  next_value.sort_by{|key, value| value}
     freq_counter = 0.0
     
     succ_list.each { |succ_value, freq|

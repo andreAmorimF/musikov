@@ -77,7 +77,10 @@ class MarkovBuilder
     create_duration_table(quarter_note_length)
     
     # For each instrument on the sequence...
-    sequence.each { |track|      
+    sequence.each { |track|
+      # Program change of the current track
+      program_change = nil
+
       # Create a list of midi elements for an instrument
       elements = []
 
@@ -85,7 +88,7 @@ class MarkovBuilder
       track.each { |event|
         
         # Consider only "NoteOn" events since they represent the start of a note event (avoid duplication with "NoteOff").
-        if MIDI::NoteOnEvent === event then
+        if event.kind_of?(MIDI::NoteOnEvent) then
           # From its correspondent "NoteOff" element, extract the duration of the note event.
           duration = event.off.time_from_start - event.time_from_start + 1
           
@@ -109,17 +112,16 @@ class MarkovBuilder
 
           # Create new markov chain state and put into the "elements" list
           elements << MidiElement.new(event.note_to_s, duration_representation)
+        elsif event.kind_of?(MIDI::ProgramChange) then
+          program_change = event.program
         end
       }
       
-      # Checking if the instrument name is well formed. Otherwise, use the track name.
-      if track.instrument.nil? or track.instrument =~ /^\s+.+/
-        track_name = track.name.strip
-      else
-        track_name = track.instrument
+      if program_change.nil?
+        program_change = 1
       end
       
-      @value_chain[track_name] ||= elements unless elements.empty?
+      @value_chain[program_change] ||= elements unless elements.empty?
     }
   end
   

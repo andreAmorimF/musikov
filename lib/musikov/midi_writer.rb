@@ -26,25 +26,27 @@ class MidiWriter
     track = MIDI::Track.new(seq)
     seq.tracks << track
     track.events << MIDI::Tempo.new(MIDI::Tempo.bpm_to_mpq(120))
-    track.events << MIDI::MetaEvent.new(MIDI::META_SEQ_NAME, 'Sequence Name')
+    i = 0
     
     # Create a track to hold the notes. Add it to the sequence.
-    sequence_hash.each { |instrument, midi_elements|
+    sequence_hash.each { |program_change, midi_elements|
       track = MIDI::Track.new(seq)
       seq.tracks << track
+      
+      instrument = MIDI::GM_PATCH_NAMES[program_change]
     
       # Give the track a name and an instrument name (optional).
-      track.name = instrument
       track.instrument = instrument
     
       # Add a volume controller event (optional).
-      
-      track.events << MIDI::Controller.new(0, MIDI::CC_VOLUME, 127)
-      track.events << MIDI::ProgramChange.new(0, 1, 0)
+      track.events << MIDI::Controller.new(i, MIDI::CC_VOLUME, 127)
+      track.events << MIDI::ProgramChange.new(i, program_change, 0)
       midi_elements.each { |midi_element|
-        track.events << MIDI::NoteOn.new(0, midi_element.note ,127,0)
-        track.events << MIDI::NoteOff.new(0, midi_element.note ,127, seq.note_to_delta(midi_element.duration))
+        track.events << MIDI::NoteOn.new(i, midi_element.note ,127,0)
+        track.events << MIDI::NoteOff.new(i, midi_element.note ,127, seq.note_to_delta(midi_element.duration))
       }
+
+      i += 1
     }
     
     write_midi(seq)
