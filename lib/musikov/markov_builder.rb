@@ -1,6 +1,7 @@
 require 'musikov/midi_parser.rb'
 require 'musikov/midi_writer.rb'
 require 'musikov/markov_model.rb'
+require 'midilib/consts'
 
 module Musikov
 
@@ -79,7 +80,7 @@ class MarkovBuilder
     # For each instrument on the sequence...
     sequence.each { |track|
       # Program change of the current track
-      program_change = nil
+      instrument = nil
 
       # Create a list of midi elements for an instrument
       elements = []
@@ -113,15 +114,19 @@ class MarkovBuilder
           # Create new markov chain state and put into the "elements" list
           elements << MidiElement.new(event.note_to_s, duration_representation)
         elsif event.kind_of?(MIDI::ProgramChange) then
-          program_change = event.program
+          if (event.channel == 10) then
+            instrument = MIDI::GM_DRUM_NOTE_NAMES[event.program]
+          else
+            instrument = MIDI::GM_PATCH_NAMES[event.program]
+          end
         end
       }
       
-      if program_change.nil?
-        program_change = 1
+      if instrument.nil? then
+        instrument = MIDI::GM_PATCH_NAMES[1]
       end
       
-      @value_chain[program_change] ||= elements unless elements.empty?
+      @value_chain[instrument] ||= elements unless elements.empty?
     }
   end
   

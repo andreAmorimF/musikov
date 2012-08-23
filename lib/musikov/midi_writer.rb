@@ -29,11 +29,16 @@ class MidiWriter
     i = 0
     
     # Create a track to hold the notes. Add it to the sequence.
-    sequence_hash.each { |program_change, midi_elements|
+    sequence_hash.each { |instrument, midi_elements|
       track = MIDI::Track.new(seq)
       seq.tracks << track
       
-      instrument = MIDI::GM_PATCH_NAMES[program_change]
+      if (MIDI::GM_PATCH_NAMES.include?(instrument)) then
+        program_change = MIDI::GM_PATCH_NAMES.index(instrument)
+      else
+        program_change = MIDI::GM_DRUM_NOTE_NAMES.index(instrument)
+        i = 10 # set channel to 10 => percussion channel
+      end
     
       # Give the track a name and an instrument name (optional).
       track.instrument = instrument
@@ -47,6 +52,7 @@ class MidiWriter
       }
 
       i += 1
+      i += 1 if (i == 10)
     }
     
     write_midi(seq)

@@ -13,7 +13,6 @@ $LOAD_PATH.unshift(File.dirname(__FILE__) + '/../lib') unless $LOAD_PATH.include
 require 'rubygems'
 require 'musikov'
 require 'thor'
-require 'midilib/consts'
 
 class MusikovStarter < Thor
 
@@ -42,10 +41,9 @@ class MusikovStarter < Thor
     
     # Shows the instruments options to the user
     opts = {}
-    repository.models_by_instrument.each_with_index { |(program_change, hash), index|
-      instrument = MIDI::GM_PATCH_NAMES[program_change]
+    repository.models_by_instrument.each_with_index { |(instrument, hash), index|
       say "#{index + 1} : #{instrument}"
-      opts[index + 1] = program_change
+      opts[index + 1] = instrument
     }
     say "* : all instruments => Default"
     
